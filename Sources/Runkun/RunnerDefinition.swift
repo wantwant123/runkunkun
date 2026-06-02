@@ -5,6 +5,10 @@ struct RunnerDefinition: Decodable {
     var palette: [String: String]
     var frames: [RunnerFrame]
 
+    var isBundledDefaultPlaceholder: Bool {
+        name == "Default Kun" && frames.count == 6
+    }
+
     var paletteColors: [Character: NSColor] {
         palette.reduce(into: [:]) { result, entry in
             guard let key = entry.key.first, let color = NSColor(hex: entry.value) else {

@@ -6,6 +6,7 @@ Runkun is a native macOS menu bar runner inspired by the spirit of RunCat. CPU u
 
 - Native macOS menu bar app built with Swift and AppKit.
 - Runner animation speed follows CPU usage.
+- Default runner uses bundled Kun PNG frames.
 - Menu shows CPU usage, memory usage, battery status, and network throughput.
 - Customizable runner frames and colors through `runner.json`.
 - GitHub Actions workflow builds and uploads a packaged `.app` zip.

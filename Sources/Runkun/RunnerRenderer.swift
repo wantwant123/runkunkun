@@ -1,6 +1,27 @@
 import AppKit
 
 final class RunnerRenderer {
+    func menuImage(from image: NSImage, size: NSSize) -> NSImage {
+        let output = NSImage(size: size)
+        output.lockFocus()
+        NSColor.clear.setFill()
+        NSRect(origin: .zero, size: size).fill()
+
+        let sourceSize = image.size
+        let scale = min(size.width / max(sourceSize.width, 1), size.height / max(sourceSize.height, 1))
+        let drawSize = NSSize(width: sourceSize.width * scale, height: sourceSize.height * scale)
+        let drawRect = NSRect(
+            x: floor((size.width - drawSize.width) / 2),
+            y: floor((size.height - drawSize.height) / 2),
+            width: drawSize.width,
+            height: drawSize.height
+        )
+        image.draw(in: drawRect, from: .zero, operation: .sourceOver, fraction: 1)
+        output.unlockFocus()
+        output.isTemplate = false
+        return output
+    }
+
     func image(for frame: RunnerFrame, palette: [Character: NSColor], size: NSSize) -> NSImage {
         let image = NSImage(size: size)
         image.lockFocus()

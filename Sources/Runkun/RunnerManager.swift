@@ -2,6 +2,7 @@ import Foundation
 
 final class RunnerManager {
     private(set) var definition = RunnerDefinition.fallback
+    private(set) var usesCustomDefinition = false
     private let fileManager = FileManager.default
 
     var folderURL: URL {
@@ -29,10 +30,13 @@ final class RunnerManager {
         do {
             let data = try Data(contentsOf: runnerURL)
             let decoded = try JSONDecoder().decode(RunnerDefinition.self, from: data)
-            definition = try decoded.validated()
+            let validated = try decoded.validated()
+            definition = validated
+            usesCustomDefinition = !validated.isBundledDefaultPlaceholder
         } catch {
             NSLog("Runkun using fallback runner: \(error)")
             definition = .fallback
+            usesCustomDefinition = false
         }
     }
 

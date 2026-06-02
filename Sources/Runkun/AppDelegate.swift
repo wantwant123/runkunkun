@@ -5,6 +5,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let metricsMonitor = SystemMetricsMonitor()
     private let runnerManager = RunnerManager()
     private let renderer = RunnerRenderer()
+    private let bundledFrameNames = (1...8).map { String(format: "frame_%02d", $0) }
 
     private var timer: Timer?
     private var menu: NSMenu?
@@ -19,10 +20,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var lastFrameDate = Date()
     private var isPaused = false
     private var lastMetrics = SystemMetrics.empty
+    private var bundledFrames: [NSImage] = []
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         runnerManager.ensureCustomizationFile()
         runnerManager.reload()
+        bundledFrames = loadBundledRunnerFrames()
         configureStatusItem()
         configureMenu()
         tick()
@@ -97,7 +100,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func updateMenu() {
-        let runnerName = runnerManager.definition.name ?? "Custom Runner"
+        let runnerName = runnerManager.usesCustomDefinition ? (runnerManager.definition.name ?? "Custom Runner") : "Bundled Kun"
         runnerItem.title = "Runkun - \(runnerName)"
         cpuItem.title = String(format: "CPU: %.0f%%", lastMetrics.cpuPercent)
         memoryItem.title = String(format: "Memory: %.0f%% used", lastMetrics.memoryUsedPercent)
@@ -107,6 +110,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func updateAnimation() {
+        if !runnerManager.usesCustomDefinition, !bundledFrames.isEmpty {
+            updateBundledAnimation()
+            return
+        }
+
         let frames = runnerManager.definition.frames
         guard !frames.isEmpty else {
             statusItem.button?.image = renderer.fallbackImage()
@@ -130,6 +138,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         image.isTemplate = false
         statusItem.button?.image = image
+    }
+
+    private func updateBundledAnimation() {
+        if !isPaused {
+            let now = Date()
+            let frameDuration = animationFrameDuration(cpuPercent: lastMetrics.cpuPercent)
+            if now.timeIntervalSince(lastFrameDate) >= frameDuration {
+                currentFrameIndex = (currentFrameIndex + 1) % bundledFrames.count
+                lastFrameDate = now
+            }
+        }
+
+        let frame = bundledFrames[currentFrameIndex % bundledFrames.count]
+        statusItem.button?.image = renderer.menuImage(from: frame, size: NSSize(width: 24, height: 24))
+    }
+
+    private func loadBundledRunnerFrames() -> [NSImage] {
+        bundledFrameNames.compactMap { name in
+            Bundle.main.url(forResource: name, withExtension: "png", subdirectory: "DefaultRunner")
+                .flatMap(NSImage.init(contentsOf:))
+        }
     }
 
     private func animationFrameDuration(cpuPercent: Double) -> TimeInterval {
