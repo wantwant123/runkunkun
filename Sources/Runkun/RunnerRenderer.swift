@@ -2,12 +2,13 @@ import AppKit
 
 final class RunnerRenderer {
     func menuImage(from image: NSImage, size: NSSize) -> NSImage {
+        let sourceImage = image.visibleAlphaImage() ?? image
         let output = NSImage(size: size)
         output.lockFocus()
         NSColor.clear.setFill()
         NSRect(origin: .zero, size: size).fill()
 
-        let sourceSize = image.size
+        let sourceSize = sourceImage.size
         let scale = min(size.width / max(sourceSize.width, 1), size.height / max(sourceSize.height, 1))
         let drawSize = NSSize(width: sourceSize.width * scale, height: sourceSize.height * scale)
         let drawRect = NSRect(
@@ -16,7 +17,7 @@ final class RunnerRenderer {
             width: drawSize.width,
             height: drawSize.height
         )
-        image.draw(in: drawRect, from: .zero, operation: .sourceOver, fraction: 1)
+        sourceImage.draw(in: drawRect, from: .zero, operation: .sourceOver, fraction: 1)
         output.unlockFocus()
         output.isTemplate = false
         return output
@@ -64,5 +65,78 @@ final class RunnerRenderer {
         NSBezierPath(ovalIn: NSRect(x: 4, y: 4, width: 14, height: 14)).fill()
         image.unlockFocus()
         return image
+    }
+}
+
+private extension NSImage {
+    func visibleAlphaImage() -> NSImage? {
+        guard let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+            return nil
+        }
+
+        let width = cgImage.width
+        let height = cgImage.height
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        var pixels = [UInt8](repeating: 0, count: height * bytesPerRow)
+
+        guard
+            let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
+            let context = CGContext(
+                data: &pixels,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: bytesPerRow,
+                space: colorSpace,
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            )
+        else {
+            return nil
+        }
+
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        var minX = width
+        var minY = height
+        var maxX = -1
+        var maxY = -1
+
+        for y in 0..<height {
+            for x in 0..<width {
+                let alpha = pixels[y * bytesPerRow + x * bytesPerPixel + 3]
+                guard alpha > 8 else {
+                    continue
+                }
+                minX = min(minX, x)
+                minY = min(minY, y)
+                maxX = max(maxX, x)
+                maxY = max(maxY, y)
+            }
+        }
+
+        guard maxX >= minX, maxY >= minY else {
+            return nil
+        }
+
+        let padding = 1
+        let cropX = max(minX - padding, 0)
+        let cropY = max(minY - padding, 0)
+        let cropMaxX = min(maxX + padding, width - 1)
+        let cropMaxY = min(maxY + padding, height - 1)
+        let cropRect = CGRect(
+            x: cropX,
+            y: cropY,
+            width: cropMaxX - cropX + 1,
+            height: cropMaxY - cropY + 1
+        )
+
+        guard let cropped = cgImage.cropping(to: cropRect) else {
+            return nil
+        }
+
+        let result = NSImage(cgImage: cropped, size: NSSize(width: cropRect.width, height: cropRect.height))
+        result.isTemplate = false
+        return result
     }
 }

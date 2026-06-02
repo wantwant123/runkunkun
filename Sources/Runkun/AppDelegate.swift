@@ -1,6 +1,9 @@
 import AppKit
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    private static let statusItemLength: CGFloat = 42
+    private static let bundledRunnerSize = NSSize(width: 36, height: 36)
+
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     private let metricsMonitor = SystemMetricsMonitor()
     private let runnerManager = RunnerManager()
@@ -39,7 +42,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func configureStatusItem() {
+        statusItem.length = Self.statusItemLength
         statusItem.button?.imagePosition = .imageOnly
+        statusItem.button?.imageScaling = .scaleProportionallyUpOrDown
         statusItem.button?.toolTip = "Runkun"
     }
 
@@ -151,7 +156,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let frame = bundledFrames[currentFrameIndex % bundledFrames.count]
-        statusItem.button?.image = renderer.menuImage(from: frame, size: NSSize(width: 24, height: 24))
+        statusItem.button?.image = renderer.menuImage(from: frame, size: Self.bundledRunnerSize)
     }
 
     private func loadBundledRunnerFrames() -> [NSImage] {
