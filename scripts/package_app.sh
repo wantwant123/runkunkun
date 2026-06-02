@@ -5,6 +5,8 @@ CONFIGURATION="${1:-release}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 APP_PATH="$ROOT/.build/Runkun.app"
 ZIP_PATH="$ROOT/.build/Runkun.zip"
+DMG_PATH="$ROOT/.build/Runkun.dmg"
+DMG_STAGING="$ROOT/.build/dmg"
 MODULE_CACHE="$ROOT/.build/module-cache"
 
 cd "$ROOT"
@@ -19,7 +21,7 @@ else
   BIN_PATH="$ROOT/.build/direct/Runkun"
 fi
 
-rm -rf "$APP_PATH" "$ZIP_PATH"
+rm -rf "$APP_PATH" "$ZIP_PATH" "$DMG_PATH" "$DMG_STAGING"
 mkdir -p "$APP_PATH/Contents/MacOS" "$APP_PATH/Contents/Resources"
 
 cp "$BIN_PATH" "$APP_PATH/Contents/MacOS/Runkun"
@@ -58,5 +60,12 @@ if command -v codesign >/dev/null 2>&1; then
   codesign --force --deep --sign - "$APP_PATH"
 fi
 
+mkdir -p "$DMG_STAGING"
+cp -R "$APP_PATH" "$DMG_STAGING/Runkun.app"
+ln -s /Applications "$DMG_STAGING/Applications"
+
 ditto -c -k --keepParent "$APP_PATH" "$ZIP_PATH"
+hdiutil create -volname "Runkun" -srcfolder "$DMG_STAGING" -ov -format UDZO "$DMG_PATH"
+
 echo "$ZIP_PATH"
+echo "$DMG_PATH"
