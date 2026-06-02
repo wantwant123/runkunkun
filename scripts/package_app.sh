@@ -10,6 +10,8 @@ DMG_STAGING="$ROOT/.build/dmg"
 ICONSET_PATH="$ROOT/.build/Runkun.iconset"
 RUNNER_CLEAN_PATH="$ROOT/.build/DefaultRunner"
 MODULE_CACHE="$ROOT/.build/module-cache"
+APP_VERSION="${RUNKUN_VERSION:-${GITHUB_REF_NAME:-0.1.0}}"
+APP_VERSION="${APP_VERSION#v}"
 
 cd "$ROOT"
 
@@ -29,15 +31,13 @@ mkdir -p "$APP_PATH/Contents/MacOS" "$APP_PATH/Contents/Resources"
 cp "$BIN_PATH" "$APP_PATH/Contents/MacOS/Runkun"
 cp "$ROOT/examples/runner.json" "$APP_PATH/Contents/Resources/runner.example.json"
 
-CLANG_MODULE_CACHE_PATH="$MODULE_CACHE" xcrun swiftc "$ROOT/scripts/clean_runner_assets.swift" -o "$ROOT/.build/clean_runner_assets" -framework AppKit
 CLANG_MODULE_CACHE_PATH="$MODULE_CACHE" xcrun swiftc "$ROOT/scripts/make_app_icon.swift" -o "$ROOT/.build/make_app_icon" -framework AppKit
-"$ROOT/.build/clean_runner_assets" "$ROOT/Assets/DefaultRunner" "$RUNNER_CLEAN_PATH"
+cp -R "$ROOT/Assets/DefaultRunner" "$RUNNER_CLEAN_PATH"
 cp -R "$RUNNER_CLEAN_PATH" "$APP_PATH/Contents/Resources/DefaultRunner"
-cp "$ROOT/Assets/DefaultRunner/preview.png" "$APP_PATH/Contents/Resources/DefaultRunner/preview.png"
 "$ROOT/.build/make_app_icon" "$RUNNER_CLEAN_PATH/frame_01.png" "$ICONSET_PATH"
 iconutil -c icns "$ICONSET_PATH" -o "$APP_PATH/Contents/Resources/Runkun.icns"
 
-cat > "$APP_PATH/Contents/Info.plist" <<'PLIST'
+cat > "$APP_PATH/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -55,7 +55,7 @@ cat > "$APP_PATH/Contents/Info.plist" <<'PLIST'
   <key>CFBundleIconFile</key>
   <string>Runkun</string>
   <key>CFBundleShortVersionString</key>
-  <string>0.1.0</string>
+  <string>$APP_VERSION</string>
   <key>CFBundleVersion</key>
   <string>1</string>
   <key>LSMinimumSystemVersion</key>

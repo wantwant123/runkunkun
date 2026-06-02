@@ -5,6 +5,7 @@ final class RunnerRenderer {
         let sourceImage = image.visibleAlphaImage() ?? image
         let output = NSImage(size: size)
         output.lockFocus()
+        NSGraphicsContext.current?.imageInterpolation = .high
         NSColor.clear.setFill()
         NSRect(origin: .zero, size: size).fill()
 

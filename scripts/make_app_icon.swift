@@ -52,7 +52,7 @@ for target in targets {
     let context = NSGraphicsContext(bitmapImageRep: bitmap)
     NSGraphicsContext.current = context
     context?.cgContext.setShouldAntialias(true)
-    context?.imageInterpolation = .none
+    context?.imageInterpolation = .high
 
     NSColor.clear.setFill()
     NSRect(x: 0, y: 0, width: pixels, height: pixels).fill()

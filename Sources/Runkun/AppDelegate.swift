@@ -1,8 +1,8 @@
 import AppKit
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private static let statusItemLength: CGFloat = 42
-    private static let bundledRunnerSize = NSSize(width: 36, height: 36)
+    private static let statusItemLength: CGFloat = 34
+    private static let bundledRunnerSize = NSSize(width: 30, height: 30)
 
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     private let metricsMonitor = SystemMetricsMonitor()
